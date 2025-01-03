@@ -10,12 +10,12 @@ Develop a chatbot that leverages customer data to provide personalized product r
 1. Build an AI-powered chatbot capable of analyzing customer behavior and customer preference to deliver personalized product recommendations in real-time.
 2. Create a dashboard for tracking chatbot performance and customer behavior insights, aiding in data-driven decision-making.
 
-## Tool
+# Tool
 - Deployment: Streamlit
 - Vector database: Crewai Tool
 - Chatbot Pipeline: Crewai
 - LLM (Large Language Model): GPT 3.5- turbo and GPT 4.0 mini
 - Data Visualization: Looker
 
-## Project intruction
+# Project intruction
 
