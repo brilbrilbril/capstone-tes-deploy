@@ -17,7 +17,7 @@ Develop a chatbot that leverages customer data to provide personalized product r
 - LLM (Large Language Model): GPT 3.5- turbo and GPT 4.0 mini
 - Data Visualization: Looker
 
-# Project intruction
+# Project instruction
 ```bash
 # Clone the repository
 git clone https://github.com/PutraAlFarizi15/capstone-project-personalized-shopping-copilot.git
