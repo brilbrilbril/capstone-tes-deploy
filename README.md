@@ -18,4 +18,23 @@ Develop a chatbot that leverages customer data to provide personalized product r
 - Data Visualization: Looker
 
 # Project intruction
+```bash
+# Clone the repository
+git clone https://github.com/PutraAlFarizi15/capstone-project-personalized-shopping-copilot.git
+
+# Navigate to the directory
+cd capstone-project-personalized-shopping-copilot
+
+# Create a virtual environment (optional but recommended)
+python -m venv venv
+
+# Activate the virtual environmentV
+venv\Scripts\activate
+
+# Install the project dependencies
+pip install -r requirements.txt
+
+# Start the development server
+streamlit run app.py
+```
 
