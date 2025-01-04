@@ -7,19 +7,66 @@ from langchain.chat_models import ChatOpenAI
 from crewai.agent import Agent
 from crewai.task import Task
 from crewai.crew import Crew
+from crewai.process import Process
 import re
 
 # Please fill your openai api key
-openai_api_key = ''
+openai_api_key = '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'
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
-csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
-csv_search_tool_product = CSVSearchTool("Dataset/url_local_product_1601-3200.csv")
-df = pd.read_csv('Dataset/Customer_Interaction_Data.csv')
-df_products = pd.read_csv('Dataset/url_local_product_1601-3200.csv')
+#csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
+
+csv_search_tool_product = CSVSearchTool("Dataset/local_product.csv")
+df = pd.read_csv('Dataset/Customer_Interaction_Data_v2.csv')
+df_products = pd.read_csv('Dataset/Product_Catalog_Data.csv')
 
 llm = ChatOpenAI(openai_api_key=openai_api_key,model_name='gpt-3.5-turbo', temperature=0.1)
 llm_product_recommender = ChatOpenAI(openai_api_key=openai_api_key,model_name='gpt-4o-mini', temperature=0.1)
+
+# retrieve purchase history tool 
+from crewai_tools import BaseTool, CSVSearchTool
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_csv_agent
+from langchain_openai import ChatOpenAI, OpenAI
+from langchain_core.prompts import ChatPromptTemplate
+
+system_prompt = (
+    "Use the given context to answer the question. "
+    "If you don't know the answer, say you don't know. "
+    "Accept context that shows about data, besides that say that the context is prohibited. "
+    "Give detailed answer, but don't make it a table. "
+    "Use this following format: "
+    "   Purchased history: "
+        "- Customer ID: "
+        "- Product ID: "
+        "- Transaction ID: "
+        "- Purchase Date: "
+        "- Order Value: "
+        "- Product Details: "
+    "Context: {context}"
+)
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        ("human", "{context}"),
+    ]
+)
+
+csv_agent = create_csv_agent(
+    ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
+    "Dataset/Customer_Interaction_Data_v2.csv",
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    allow_dangerous_code=True,
+    prompt=prompt
+)
+
+class PurchaseHistoryInfo(BaseTool):
+    name: str = "Purchase History Information Tool"
+    description: str = "Search past history based on specific task and customer"
+
+    def _run(self, query: str) -> str:
+        return csv_agent.run(query)
 
 # agent to retrieve purchase history
 purchase_history_retriever_agent = Agent(
@@ -35,7 +82,7 @@ purchase_history_retriever_agent = Agent(
     llm=llm,
     verbose=True,
     allow_delegation=True,
-    tools=[csv_search_tool_history]
+    tools=[PurchaseHistoryInfo()]
 )
 
 #agent to retrieve products
@@ -148,7 +195,8 @@ crew = Crew(
     agents=[purchase_history_retriever_agent, product_catalog_retriever_agent, review_agent, product_recommender_agent],
     tasks=[retrieve_purchase_history_task, retrieve_product_catalog_task, review_result_task, product_recommendation_task],
     verbose=True,
-    memory=True
+    memory=True,
+    process=Process.sequential
 )
 
 # Streamlit Interface
@@ -204,7 +252,8 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
     #st.write("Here are your recommendations:")
     for product_id in product_ids:
         # Get image URL or file path
-        url = df_products[df_products['Product_ID'] == product_id]['Url_Image'].iloc[0]
+        url = df_products[df_products['Product_ID'] == product_id]['Url_Image']
+        print(url)
         img = Image.open(url)
 
         # Display product details and image
