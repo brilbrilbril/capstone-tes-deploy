@@ -3,7 +3,7 @@
 | ------------- | ------------- |
 | Brillyando Magathan Achmad  | Data preparation, data cleaning, and preprocessing data. Create, build, and develope multi-agent system, implement virtual try on and integrate to streamlit  |
 | Putra Al Farizi  | Data Preparation, Data Preprocessing, Develop Multi-agent system, Analyze Retention Rate, Average Order Value and Conversion Rate, display recommended product images, Build Streamlit Application Chatbot |
-| Khalid Destiawan  | Data Preparation, Develop Multi-agent system, Analyze Retention Rate, Average Order Value and Conversion Rate. Dashboard development |
+| Khalid Destiawan  | Data Preparation, Analyze Retention Rate, Average Order Value and Conversion Rate. Dashboard development |
 
 # Business Understanding
 
