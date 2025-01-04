@@ -11,7 +11,7 @@ from crewai.process import Process
 import re
 
 # Please fill your openai api key
-openai_api_key = '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'
+openai_api_key = ''
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
