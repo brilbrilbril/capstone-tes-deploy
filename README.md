@@ -34,6 +34,9 @@ venv\Scripts\activate
 # Install the project dependencies
 pip install -r requirements.txt
 
+# fill openai api key in file app.py
+openai_api_key = 'your openai api key'
+
 # Start the development server
 streamlit run app.py
 ```
