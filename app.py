@@ -197,6 +197,7 @@ crew = Crew(
     verbose=True,
     memory=True,
     process=Process.sequential
+    memory=False
 )
 
 # Streamlit Interface
@@ -251,6 +252,7 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
 
     #st.write("Here are your recommendations:")
     for product_id in product_ids:
+        print("local")
         # Get image URL or file path
         url = df_products[df_products['Product_ID'] == product_id]['Url_Image']
         print(url)
@@ -262,3 +264,19 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
         st.button(f"Buy {product_id}")
         st.button(f"Virtual Try-On for {product_id}")    
 
+        print("remote")
+        # validation product_ids in df_product
+        filtered_df = df_products[df_products['Product_ID'] == product_id]
+        if not filtered_df.empty:
+            # Get image URL or file path
+            url = filtered_df['Url_Image'].iloc[0]
+            img = Image.open(url)
+            img.thumbnail((300, 600)) # Maksimum lebar dan tinggi
+            
+            # Menggunakan tiga kolom untuk memusatkan elemen
+            col1, col2, col3 = st.columns([1, 2, 1])  # Rasio kolom: kiri, tengah, kanan
+            with col2:  # Konten di kolom tengah
+                st.subheader(f"Product ID: {product_id}")
+                st.image(img, caption=f"Product ID: {product_id}")
+                st.button(f"Buy {product_id}")
+                st.button(f"Virtual Try-On for {product_id}")
