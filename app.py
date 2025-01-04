@@ -203,13 +203,17 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
 
     #st.write("Here are your recommendations:")
     for product_id in product_ids:
-        # Get image URL or file path
-        url = df_products[df_products['Product_ID'] == product_id]['Url_Image'].iloc[0]
-        img = Image.open(url)
+        # validation product_ids in df_product
+        filtered_df = df_products[df_products['Product_ID'] == product_id]
+        if not filtered_df.empty:
+            # Get image URL or file path
+            url = filtered_df['Url_Image'].iloc[0]
+            img = Image.open(url)
+            #img.thumbnail((300, 300)) # Maksimum lebar dan tinggi
 
-        # Display product details and image
-        st.subheader(f"Product ID: {product_id}")
-        st.image(img, caption=f"Product ID: {product_id}")
-        st.button(f"Buy {product_id}")
-        st.button(f"Virtual Try-On for {product_id}")    
+            # Display product details and image
+            st.subheader(f"Product ID: {product_id}")
+            st.image(img, caption=f"Product ID: {product_id}")
+            st.button(f"Buy {product_id}")
+            st.button(f"Virtual Try-On for {product_id}")    
 
