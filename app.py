@@ -11,14 +11,15 @@ from crewai.process import Process
 import re
 
 # Please fill your openai api key
-openai_api_key = ' '
+openai_api_key = ""
+
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
 
 csv_search_tool_product = CSVSearchTool("Dataset/local_product.csv")
 df = pd.read_csv('Dataset/Customer_Interaction_Data_v2.csv')
-df_products = pd.read_csv('Dataset/Product_Catalog_Data.csv')
+df_products = pd.read_csv('Dataset/local_product.csv')
 
 llm = ChatOpenAI(openai_api_key=openai_api_key,model_name='gpt-3.5-turbo', temperature=0.1)
 llm_product_recommender = ChatOpenAI(openai_api_key=openai_api_key,model_name='gpt-4o-mini', temperature=0.1)
@@ -197,7 +198,6 @@ crew = Crew(
     verbose=True,
     memory=True,
     process=Process.sequential
-    memory=False
 )
 
 # Streamlit Interface
@@ -255,7 +255,8 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
         print("local")
         # Get image URL or file path
         url = df_products[df_products['Product_ID'] == product_id]['Url_Image']
-        print(url)
+        if "jpg" not in url:
+            url = url+".jpg"
         img = Image.open(url)
 
         # Display product details and image
