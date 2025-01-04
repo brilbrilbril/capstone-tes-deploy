@@ -6,8 +6,6 @@
 | Content Cell  | Content Cell  |
 
 # Business Understanding
-![Struktur Database](image/PROD1457.jpg)
-![Struktur Database](image/PROD1457.jpg)
 
 ## Problem Description
 An e-commerce platform faces challenges in delivering a personalized shopping experience. The lack of tailored product recommendations leads to reduced customer engagement, lower conversion rates, and a suboptimal average order value. Customers expect intuitive and customized support when navigating extensive product catalogs, but the platform currently lacks the capability to provide this level of personalization.
