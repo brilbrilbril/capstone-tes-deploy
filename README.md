@@ -6,6 +6,8 @@
 | Content Cell  | Content Cell  |
 
 # Business Understanding
+![Struktur Database](image/PROD1457.jpg)
+![Struktur Database](image/PROD1457.jpg)
 
 ## Problem Description
 An e-commerce platform faces challenges in delivering a personalized shopping experience. The lack of tailored product recommendations leads to reduced customer engagement, lower conversion rates, and a suboptimal average order value. Customers expect intuitive and customized support when navigating extensive product catalogs, but the platform currently lacks the capability to provide this level of personalization.
@@ -75,7 +77,30 @@ Welcome! Please provide your Customer ID to start.
 2. **Request Product Recommendations**
     - Example prompt: white shirt with friend
     - The chatbot will recommend up to 3 products along with Buy and Virtual Try On buttons.
+    after entering the Query, expectation that the chatbot response will be:
+        ```bash
+        based on the analysis of your purchase history and the product catalog, I recommend the following blue shirts for your vacation:
 
+        1.Product ID: PROD4632
+
+        Rating: 3.66\
+        Size: L\
+        Color: Blue\
+        Price: 2,207,297.76\
+        Weather: Sunny\
+        Event Type: Vacation\
+        Reason: This shirt is specifically designed for sunny weather, making it ideal for vacation. Its blue color aligns with your preference, and it falls within a similar price range to your previous purchases, indicating a potential fit for your budget.
+        ```
+        ![Struktur Database](image/PROD1457.jpg)\
+        ```bash
+        Virtual Try On
+        ```
+
+3. Virtual Try-On  
+    - Click the **Virtual Try On** button to try the product virtually.  
+    - You will then be prompted to upload a picture of a model or a person.  
+    - The uploaded image will be processed, and the result will display the person wearing the selected clothing item. \
+    **Important:** The Virtual Try-On feature has a usage limit. Please use it wisely. 
 
 ## NOTES (IMPORTANT!)
 This app is under development. For frist execute, it maybe will take a lot of time because 
