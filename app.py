@@ -8,28 +8,26 @@ from crewai.agent import Agent
 from crewai.task import Task
 from crewai.crew import Crew
 from crewai.process import Process
+# retrieve purchase history tool 
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_csv_agent
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 import re
 
 # Please fill your openai api key
-openai_api_key = ""
 
+openai_api_key = ""
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
 
-csv_search_tool_product = CSVSearchTool("Dataset/local_product.csv")
+csv_search_tool_product = CSVSearchTool("Dataset/final_product_catalog.csv")
 df = pd.read_csv('Dataset/Customer_Interaction_Data_v2.csv')
-df_products = pd.read_csv('Dataset/local_product.csv')
+df_products = pd.read_csv('Dataset/final_product_catalog.csv')
 
 llm = ChatOpenAI(openai_api_key=openai_api_key,model_name='gpt-3.5-turbo', temperature=0.1)
 llm_product_recommender = ChatOpenAI(openai_api_key=openai_api_key,model_name='gpt-4o-mini', temperature=0.1)
-
-# retrieve purchase history tool 
-from crewai_tools import BaseTool, CSVSearchTool
-from langchain.agents.agent_types import AgentType
-from langchain_experimental.agents.agent_toolkits import create_csv_agent
-from langchain_openai import ChatOpenAI, OpenAI
-from langchain_core.prompts import ChatPromptTemplate
 
 system_prompt = (
     "Use the given context to answer the question. "
@@ -196,8 +194,8 @@ crew = Crew(
     agents=[purchase_history_retriever_agent, product_catalog_retriever_agent, review_agent, product_recommender_agent],
     tasks=[retrieve_purchase_history_task, retrieve_product_catalog_task, review_result_task, product_recommendation_task],
     verbose=True,
-    memory=True,
-    process=Process.sequential
+    memory=False,
+    process=Process.sequential,
 )
 
 # Streamlit Interface
@@ -247,25 +245,10 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
     # Regular expression pattern to extract Product ID
     pattern = r"Product[_ ]ID: (\w+)"
     product_ids = re.findall(pattern, output)
-    
-    print("Produk ID: ",product_ids)
-
-    #st.write("Here are your recommendations:")
-    for product_id in product_ids:
-        print("local")
-        # Get image URL or file path
-        url = df_products[df_products['Product_ID'] == product_id]['Url_Image']
-        if "jpg" not in url:
-            url = url+".jpg"
-        img = Image.open(url)
-
-        # Display product details and image
-        st.subheader(f"Product ID: {product_id}")
-        st.image(img, caption=f"Product ID: {product_id}")
-        st.button(f"Buy {product_id}")
-        st.button(f"Virtual Try-On for {product_id}")    
-
-        print("remote")
+    # Menghilangkan duplikasi
+    unique_product_ids = list(set(product_ids))
+    print("Produk ID: ",unique_product_ids)
+    for product_id in unique_product_ids:
         # validation product_ids in df_product
         filtered_df = df_products[df_products['Product_ID'] == product_id]
         if not filtered_df.empty:
@@ -279,5 +262,5 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
             with col2:  # Konten di kolom tengah
                 st.subheader(f"Product ID: {product_id}")
                 st.image(img, caption=f"Product ID: {product_id}")
-                st.button(f"Buy {product_id}")
-                st.button(f"Virtual Try-On for {product_id}")
+                st.button(f"Buy {product_id}", key=f"buy_{product_id}")
+                st.button(f"Virtual Try-On for {product_id}", key=f"try_{product_id}")
