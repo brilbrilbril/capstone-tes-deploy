@@ -1,3 +1,10 @@
+# Contributor
+| Name  | Job Description |
+| ------------- | ------------- |
+| Brillyando Magathan Achmad  | Data preparation, data cleaning, and preprocessing data. Create, build, and develope multi-agent system, implement virtual try on and integrate to streamlit  |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
+
 # Business Understanding
 
 ## Problem Description
@@ -68,3 +75,10 @@ Welcome! Please provide your Customer ID to start.
 2. **Request Product Recommendations**
     - Example prompt: white shirt with friend
     - The chatbot will recommend up to 3 products along with Buy and Virtual Try On buttons.
+
+
+## NOTES (IMPORTANT!)
+This app is under development. For frist execute, it maybe will take a lot of time because 
+the dataset is wrote to the chromadb. The product recommendation is not perfect because the tool used is still experimental.
+
+The uploaded image and result from virtual try on will be saved on local, so take a look at your drive.

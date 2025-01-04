@@ -14,10 +14,13 @@ from langchain_experimental.agents.agent_toolkits import create_csv_agent
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 import re
+from gradio_client import Client as GradioClient, file, handle_file
+import cv2
+
 
 # Please fill your openai api key
 
-openai_api_key = ""
+openai_api_key = "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"
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
@@ -206,6 +209,47 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "Welcome! Please provide your Customer ID to start."}]
 if "customer_id" not in st.session_state:
     st.session_state["customer_id"] = None
+if "clicked_button" not in st.session_state:
+    st.session_state.clicked_button = None
+if "product_ids" not in st.session_state:
+    st.session_state.product_ids = []
+if "uploaded_image" not in st.session_state:
+    st.session_state.uploaded_image = None
+if "product_url" not in st.session_state:
+    st.session_state.product_url = None
+if "uploaded_image_name" not in st.session_state:
+    st.session_state.uploaded_image_name = None
+if "waiting_for_image" not in st.session_state:
+    st.session_state.waiting_for_image = False
+
+# log debug for button click
+    
+def handle_click(action, product_id):
+    st.session_state.clicked_button = f"{action} for {product_id}"
+    
+    st.session_state.product_id = product_id
+    st.session_state.product_url = f"image/{product_id}.jpg"
+
+    st.session_state.waiting_for_image = True
+
+# virtual try on function
+def virtual_tryon(garment_img_path, person_img_path):
+    gradio_client = GradioClient("Nymbo/Virtual-Try-On")
+    result = gradio_client.predict(
+                dict={"background": file(person_img_path), "layers": [], "composite": None},
+                garm_img=handle_file(garment_img_path),
+                garment_des="",
+                is_checked=True,
+                is_checked_crop=False,
+                denoise_steps=30,
+                seed=42,
+                api_name="/tryon"
+            )
+    try_on_image_path = result[0]
+    img = cv2.imread(try_on_image_path)
+    cv2.imwrite("result.png", img)
+
+    return Image.open("result.png")
 
 # Menampilkan percakapan sebelumnya
 for msg in st.session_state.messages:
@@ -247,8 +291,11 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
     product_ids = re.findall(pattern, output)
     # Menghilangkan duplikasi
     unique_product_ids = list(set(product_ids))
+    st.session_state.product_ids = unique_product_ids
     print("Produk ID: ",unique_product_ids)
-    for product_id in unique_product_ids:
+
+if st.session_state.product_ids:   
+    for product_id in st.session_state.product_ids:
         # validation product_ids in df_product
         filtered_df = df_products[df_products['Product_ID'] == product_id]
         if not filtered_df.empty:
@@ -262,5 +309,38 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
             with col2:  # Konten di kolom tengah
                 st.subheader(f"Product ID: {product_id}")
                 st.image(img, caption=f"Product ID: {product_id}")
-                st.button(f"Buy {product_id}", key=f"buy_{product_id}")
-                st.button(f"Virtual Try-On for {product_id}", key=f"try_{product_id}")
+                st.button(
+                    f"Virtual Try-On for {product_id}",
+                    key=f"try_{product_id}",
+                    on_click=handle_click,
+                    args=("Try ", product_id),
+                    )
+
+    # if it's waiting for image
+    if st.session_state.waiting_for_image:
+        # upload image
+        uploaded_image = st.file_uploader("Please upload person image:", type=["jpg", "png", "jpeg"])
+        print("tes upliad:", uploaded_image)
+        if uploaded_image:
+            st.session_state.uploaded_image = uploaded_image  # Store uploaded image in session state
+            st.session_state.uploaded_image_name = uploaded_image.name  # Store image name
+
+            with open(uploaded_image.name, "wb") as f:
+                f.write(uploaded_image.getbuffer())
+            st.success(f"Image uploaded and saved successfully!")
+            
+            with st.spinner('Virtual try on is running...'):
+                result_vto = virtual_tryon(st.session_state.product_url, uploaded_image.name)
+            st.success("Done!")
+
+            # display the result
+            st.image(result_vto, caption=f"Try on for {st.session_state.product_id}")
+            
+            # print details
+            # print(f"Customer ID: {st.session_state['customer_id']}")
+            # print(f"Product ID: {st.session_state.product_id}")
+            # print(f"Product URL: {st.session_state.product_url}")
+            # print(f"Uploaded Image: {uploaded_image.name}")
+            
+            # stop asking for the image
+            st.session_state.waiting_for_image = False
