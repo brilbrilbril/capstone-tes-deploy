@@ -148,7 +148,7 @@ crew = Crew(
     agents=[purchase_history_retriever_agent, product_catalog_retriever_agent, review_agent, product_recommender_agent],
     tasks=[retrieve_purchase_history_task, retrieve_product_catalog_task, review_result_task, product_recommendation_task],
     verbose=True,
-    memory=True
+    memory=False
 )
 
 # Streamlit Interface
@@ -209,11 +209,12 @@ if prompt := st.chat_input(placeholder="Type here for recommend product..."):
             # Get image URL or file path
             url = filtered_df['Url_Image'].iloc[0]
             img = Image.open(url)
-            #img.thumbnail((300, 300)) # Maksimum lebar dan tinggi
-
-            # Display product details and image
-            st.subheader(f"Product ID: {product_id}")
-            st.image(img, caption=f"Product ID: {product_id}")
-            st.button(f"Buy {product_id}")
-            st.button(f"Virtual Try-On for {product_id}")    
-
+            img.thumbnail((300, 600)) # Maksimum lebar dan tinggi
+            
+            # Menggunakan tiga kolom untuk memusatkan elemen
+            col1, col2, col3 = st.columns([1, 2, 1])  # Rasio kolom: kiri, tengah, kanan
+            with col2:  # Konten di kolom tengah
+                st.subheader(f"Product ID: {product_id}")
+                st.image(img, caption=f"Product ID: {product_id}")
+                st.button(f"Buy {product_id}")
+                st.button(f"Virtual Try-On for {product_id}")
