@@ -2,8 +2,8 @@
 | Name  | Job Description |
 | ------------- | ------------- |
 | Brillyando Magathan Achmad  | Data preparation, data cleaning, and preprocessing data. Create, build, and develope multi-agent system, implement virtual try on and integrate to streamlit  |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
+| Putra Al Farizi  | Data Preparation, Data Preprocessing, Develop Multi-agent system, Analyze Retention Rate, Average Order Value and Conversion Rate, display recommended product images, Build Streamlit Application Chatbot |
+| Khalid Destiawan  | Data Preparation, Analyze Retention Rate, Average Order Value and Conversion Rate. Dashboard development |
 
 # Business Understanding
 
@@ -75,7 +75,30 @@ Welcome! Please provide your Customer ID to start.
 2. **Request Product Recommendations**
     - Example prompt: white shirt with friend
     - The chatbot will recommend up to 3 products along with Buy and Virtual Try On buttons.
+    after entering the Query, expectation that the chatbot response will be:
+        ```bash
+        based on the analysis of your purchase history and the product catalog, I recommend the following blue shirts for your vacation:
 
+        1.Product ID: PROD4632
+
+        Rating: 3.66\
+        Size: L\
+        Color: Blue\
+        Price: 2,207,297.76\
+        Weather: Sunny\
+        Event Type: Vacation\
+        Reason: This shirt is specifically designed for sunny weather, making it ideal for vacation. Its blue color aligns with your preference, and it falls within a similar price range to your previous purchases, indicating a potential fit for your budget.
+        ```
+        ![Struktur Database](image/PROD1457.jpg)\
+        ```bash
+        Virtual Try On
+        ```
+
+3. Virtual Try-On  
+    - Click the **Virtual Try On** button to try the product virtually.  
+    - You will then be prompted to upload a picture of a model or a person.  
+    - The uploaded image will be processed, and the result will display the person wearing the selected clothing item. \
+    **Important:** The Virtual Try-On feature has a usage limit. Please use it wisely. 
 
 ## NOTES (IMPORTANT!)
 This app is under development. For frist execute, it maybe will take a lot of time because 
