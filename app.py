@@ -20,7 +20,7 @@ import cv2
 
 # Please fill your openai api key
 
-openai_api_key = ""
+openai_api_key = "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"
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
@@ -224,11 +224,11 @@ if "waiting_for_image" not in st.session_state:
 
 # log debug for button click
     
-def handle_click(action, product_id):
+def handle_click(action, product_id, url):
     st.session_state.clicked_button = f"{action} for {product_id}"
     
     st.session_state.product_id = product_id
-    st.session_state.product_url = f"image/{product_id}.jpg"
+    st.session_state.product_url = url
 
     st.session_state.waiting_for_image = True
 
@@ -313,7 +313,7 @@ if st.session_state.product_ids:
                     f"Virtual Try-On for {product_id}",
                     key=f"try_{product_id}",
                     on_click=handle_click,
-                    args=("Try ", product_id),
+                    args=("Try ", product_id, url),
                     )
 
     # if it's waiting for image
@@ -330,10 +330,12 @@ if st.session_state.product_ids:
             st.success(f"Image uploaded and saved successfully!")
             
             with st.spinner('Virtual try on is running...'):
+                print(st.session_state.product_url)
                 result_vto = virtual_tryon(st.session_state.product_url, uploaded_image.name)
             st.success("Done!")
 
             # display the result
+            result_vto.thumbnail((300, 600))
             st.image(result_vto, caption=f"Try on for {st.session_state.product_id}")
             
             # print details
