@@ -20,7 +20,7 @@ import cv2
 
 # Please fill your openai api key
 
-openai_api_key = "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"
+openai_api_key = ""
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
