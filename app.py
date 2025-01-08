@@ -25,7 +25,6 @@ import cv2
 
 
 # Please fill your openai api key
-
 openai_api_key = ""
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
@@ -182,8 +181,10 @@ if st.session_state.product_ids:
             # Menggunakan tiga kolom untuk memusatkan elemen
             col1, col2, col3 = st.columns([1, 2, 1])  # Rasio kolom: kiri, tengah, kanan
             with col2:  # Konten di kolom tengah
-                st.subheader(f"Product ID: {product_id}")
-                st.image(img, caption=f"Product ID: {product_id}")
+                #st.subheader(f"Product ID: {product_id}")
+                st.subheader(f"{product_id}")
+                #st.image(img, caption=f"Product ID: {product_id}")
+                st.image(img)
                 st.button(
                     f"Virtual Try-On for {product_id}",
                     key=f"try_{product_id}",
