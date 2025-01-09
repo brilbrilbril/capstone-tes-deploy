@@ -73,27 +73,6 @@ def multi_agent_rag(query, vector_db, purchase_hist):
     retrieved_docs = retrieve_documents(query, vector_db)
     return generate_response_openai(query, retrieved_docs, purchase_hist)
 
-# Streamlit Interface
-st.title("💬 Product Recommendation Chatbot")
-
-# Inisialisasi sesi untuk menyimpan percakapan dan ID pelanggan
-if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "Welcome! Please provide your Customer ID to start."}]
-if "customer_id" not in st.session_state:
-    st.session_state["customer_id"] = None
-if "clicked_button" not in st.session_state:
-    st.session_state.clicked_button = None
-if "product_ids" not in st.session_state:
-    st.session_state.product_ids = []
-if "uploaded_image" not in st.session_state:
-    st.session_state.uploaded_image = None
-if "product_url" not in st.session_state:
-    st.session_state.product_url = None
-if "uploaded_image_name" not in st.session_state:
-    st.session_state.uploaded_image_name = None
-if "waiting_for_image" not in st.session_state:
-    st.session_state.waiting_for_image = False
-
 # log debug for button click
     
 def handle_click(action, product_id, url):
@@ -123,104 +102,119 @@ def virtual_tryon(garment_img_path, person_img_path):
 
     return Image.open("result.png")
 
-# Menampilkan percakapan sebelumnya
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).markdown(msg["content"])
+# Fungsi utama chatbot
+def chatbot_function():
+    # Streamlit Interface
+    st.header("💬 Product Recommendation Chatbot")
 
-# Input pengguna
-if prompt := st.chat_input(placeholder="Type here for recommend product..."):
-    # Simpan dan tampilkan input pengguna
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
+    # Inisialisasi sesi untuk menyimpan percakapan dan ID pelanggan
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = [{"role": "assistant", "content": "Welcome! Please provide your Customer ID to start."}]
+    if "customer_id" not in st.session_state:
+        st.session_state["customer_id"] = None
+    if "clicked_button" not in st.session_state:
+        st.session_state.clicked_button = None
+    if "product_ids" not in st.session_state:
+        st.session_state.product_ids = []
+    if "uploaded_image" not in st.session_state:
+        st.session_state.uploaded_image = None
+    if "product_url" not in st.session_state:
+        st.session_state.product_url = None
+    if "uploaded_image_name" not in st.session_state:
+        st.session_state.uploaded_image_name = None
+    if "waiting_for_image" not in st.session_state:
+        st.session_state.waiting_for_image = False
 
-    # Respons dari asisten
-    if not st.session_state["customer_id"]:
-        # Jika belum ada Customer ID, minta pengguna memasukkan ID
-        st.session_state["customer_id"] = prompt
-        if st.session_state["customer_id"] not in df["Customer_ID"].values:
-            response = "Customer ID not found. Please try again."
-            st.session_state["customer_id"] = None  # Reset ID
+    # Menampilkan percakapan sebelumnya
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).markdown(msg["content"])
+
+    # Input pengguna
+    if prompt := st.chat_input(placeholder="Type here for recommend product..."):
+        # Simpan dan tampilkan input pengguna
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.chat_message("user").write(prompt)
+
+        # Respons dari asisten
+        if not st.session_state["customer_id"]:
+            # Jika belum ada Customer ID, minta pengguna memasukkan ID
+            st.session_state["customer_id"] = prompt
+            if st.session_state["customer_id"] not in df["Customer_ID"].values:
+                response = "Customer ID not found. Please try again."
+                st.session_state["customer_id"] = None  # Reset ID
+            else:
+                response = f"Thank you! Customer ID '{st.session_state['customer_id']}' has been verified. How can I assist you?"
         else:
-            response = f"Thank you! Customer ID '{st.session_state['customer_id']}' has been verified. How can I assist you?"
-    else:
-        # Proses permintaan dengan Crew
-        try:
-            inputs = {"query": prompt, "customer": st.session_state["customer_id"]}
-            vector_db = load_vector_db()
-            transaction_data = retrieve_transcation(st.session_state["customer_id"])
-            response = multi_agent_rag(inputs['query'], vector_db, transaction_data)
-        except Exception as e:
-            response = f"An error occurred: {e}"
+            # Proses permintaan dengan Crew
+            try:
+                inputs = {"query": prompt, "customer": st.session_state["customer_id"]}
+                vector_db = load_vector_db()
+                transaction_data = retrieve_transcation(st.session_state["customer_id"])
+                response = multi_agent_rag(inputs['query'], vector_db, transaction_data)
+            except Exception as e:
+                response = f"An error occurred: {e}"
 
-    # Simpan dan tampilkan respons dari asisten
-    st.session_state.messages.append({"role": "assistant", "content": response})
-    st.chat_message("assistant").markdown(response)
-    
-    # Extract raw output
-    output = response
-    print(output)
-    # Regular expression pattern to extract Product ID
-    pattern = r"(?i)\b(PROD\d+)\b"
-    product_ids = re.findall(pattern, output)
-    print(product_ids)
-    # Menghilangkan duplikasi
-    unique_product_ids = list(set(product_ids))
-    st.session_state.product_ids = unique_product_ids
-    print("Produk ID: ",unique_product_ids)
+        # Simpan dan tampilkan respons dari asisten
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.chat_message("assistant").markdown(response)
 
-if st.session_state.product_ids:   
-    for product_id in st.session_state.product_ids:
-        # validation product_ids in df_product
-        filtered_df = df_products[df_products['Product_ID'] == product_id]
-        if not filtered_df.empty:
-            # Get image URL or file path
-            url = filtered_df['Url_Image'].iloc[0]
-            img = Image.open(url)
-            img.thumbnail((300, 600)) # Maksimum lebar dan tinggi
-            
-            # Menggunakan tiga kolom untuk memusatkan elemen
-            col1, col2, col3 = st.columns([1, 2, 1])  # Rasio kolom: kiri, tengah, kanan
-            with col2:  # Konten di kolom tengah
-                #st.subheader(f"Product ID: {product_id}")
-                st.subheader(f"{product_id}")
-                #st.image(img, caption=f"Product ID: {product_id}")
-                st.image(img)
-                st.button(
-                    f"Virtual Try-On for {product_id}",
-                    key=f"try_{product_id}",
-                    on_click=handle_click,
-                    args=("Try ", product_id, url),
+        # Extract raw output
+        output = response
+        print(output)
+        # Regular expression pattern to extract Product ID
+        pattern = r"(?i)\b(PROD\d+)\b"
+        product_ids = re.findall(pattern, output)
+        print(product_ids)
+        # Menghilangkan duplikasi
+        unique_product_ids = list(set(product_ids))
+        st.session_state.product_ids = unique_product_ids
+        print("Produk ID: ", unique_product_ids)
+
+    if st.session_state.product_ids:
+        for product_id in st.session_state.product_ids:
+            # Validasi product_ids di df_product
+            filtered_df = df_products[df_products['Product_ID'] == product_id]
+            if not filtered_df.empty:
+                # Mendapatkan URL gambar atau file path
+                url = filtered_df['Url_Image'].iloc[0]
+                img = Image.open(url)
+                img.thumbnail((300, 600))  # Maksimum lebar dan tinggi
+
+                # Menggunakan tiga kolom untuk memusatkan elemen
+                col1, col2, col3 = st.columns([1, 2, 1])  # Rasio kolom: kiri, tengah, kanan
+                with col2:  # Konten di kolom tengah
+                    st.subheader(f"{product_id}")
+                    st.image(img)
+                    st.button(
+                        f"Virtual Try-On for {product_id}",
+                        key=f"try_{product_id}",
+                        on_click=handle_click,
+                        args=("Try ", product_id, url),
                     )
 
-    # if it's waiting for image
-    if st.session_state.waiting_for_image:
-        # upload image
-        uploaded_image = st.file_uploader("Please upload person image:", type=["jpg", "png", "jpeg"])
-        print("tes upliad:", uploaded_image)
-        if uploaded_image:
-            st.session_state.uploaded_image = uploaded_image  # Store uploaded image in session state
-            st.session_state.uploaded_image_name = uploaded_image.name  # Store image name
-            image = Image.open(uploaded_image)
-            image.thumbnail((300,600))
-            st.image(image, caption="Your image")
-            with open(uploaded_image.name, "wb") as f:
-                f.write(uploaded_image.getbuffer())
-            st.success(f"Image uploaded and saved successfully!")
-            
-            with st.spinner('Virtual try on is running...'):
-                print(st.session_state.product_url)
-                result_vto = virtual_tryon(st.session_state.product_url, uploaded_image.name)
-            st.success("Done!")
+        # Jika sedang menunggu gambar
+        if st.session_state.waiting_for_image:
+            # Unggah gambar
+            uploaded_image = st.file_uploader("Please upload person image:", type=["jpg", "png", "jpeg"])
+            print("tes upliad:", uploaded_image)
+            if uploaded_image:
+                st.session_state.uploaded_image = uploaded_image  # Simpan gambar yang diunggah di session state
+                st.session_state.uploaded_image_name = uploaded_image.name  # Simpan nama gambar
+                image = Image.open(uploaded_image)
+                image.thumbnail((300, 600))
+                st.image(image, caption="Your image")
+                with open(uploaded_image.name, "wb") as f:
+                    f.write(uploaded_image.getbuffer())
+                st.success(f"Image uploaded and saved successfully!")
 
-            # display the result
-            result_vto.thumbnail((300, 600))
-            st.image(result_vto, caption=f"Try on for {st.session_state.product_id}")
-            
-            # print details
-            # print(f"Customer ID: {st.session_state['customer_id']}")
-            # print(f"Product ID: {st.session_state.product_id}")
-            # print(f"Product URL: {st.session_state.product_url}")
-            # print(f"Uploaded Image: {uploaded_image.name}")
-            
-            # stop asking for the image
-            st.session_state.waiting_for_image = False
+                with st.spinner('Virtual try on is running...'):
+                    print(st.session_state.product_url)
+                    result_vto = virtual_tryon(st.session_state.product_url, uploaded_image.name)
+                st.success("Done!")
+
+                # tampilkan hasilnya
+                result_vto.thumbnail((300, 600))
+                st.image(result_vto, caption=f"Try on for {st.session_state.product_id}")
+
+                # Stop asking for the image
+                st.session_state.waiting_for_image = False

@@ -53,7 +53,7 @@ Follow these steps to install the project from GitHub:
     openai_api_key = 'your openai api key'
 7. **Run the application using Streamlit**
     ```bash
-    streamlit run app.py
+    streamlit run main.py
     ```
 
 ## How to use Application
