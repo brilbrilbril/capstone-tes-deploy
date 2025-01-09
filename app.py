@@ -26,7 +26,7 @@ import cv2
 
 # Please fill your openai api key
 
-openai_api_key = ""
+openai_api_key = "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"
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
@@ -43,7 +43,9 @@ def load_vector_db():
     return vector_db
 
 def retrieve_transcation(cust_id):
-    return df[df['Customer_ID'] == cust_id].head(3).to_dict()
+    transcation = df[df['Customer_ID'] == cust_id].head(2)
+    retrieve = transcation["Product_ID"] + transcation["ProductDetails"]
+    return retrieve.to_dict()
 
 # 2. Retrieval Agent
 def retrieve_documents(query, vector_db, top_k=5):
