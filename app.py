@@ -191,14 +191,10 @@ def chatbot_function():
         else:
             # Proses permintaan dengan Crew
             try:
-                placeholder = st.empty()
-                response = ""
                 inputs = {"query": prompt, "customer": st.session_state["customer_id"]}
                 vector_db = load_vector_db()
                 transaction_data = retrieve_transcation(st.session_state["customer_id"])
-                for chunk in multi_agent_rag(inputs['query'], vector_db, transaction_data):
-                    response+=chunk
-                    placeholder.text(response)
+                response = multi_agent_rag(inputs['query'], vector_db, transaction_data)
             except Exception as e:
                 response = f"An error occurred: {e}"
 
