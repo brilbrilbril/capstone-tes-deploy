@@ -191,7 +191,7 @@ def chatbot_function():
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).markdown(msg["content"])
     for img in st.session_state.shown_image:
-        st.image(img)
+        #st.image(img)
         st.session_state.shown_image.remove(img)
     # Input pengguna
     if prompt := st.chat_input(placeholder="Type here for recommend product..."):
