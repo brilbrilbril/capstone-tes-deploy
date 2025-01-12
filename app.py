@@ -68,10 +68,46 @@ def generate_response_openai(query, docs, purchase_hist):
     )
     return completion.choices[0].message.content
 
+def generate_streaming_response_openai(query, docs, purchase_hist):
+    # Combine retrieved documents into context
+    context = "\n\n".join([doc.page_content for doc in docs])
+    prompt = (
+        f"Answer the following question based on the context:\n\nContext: {context}\n by providing a similarity with user purchase history:\n\n History : {purchase_hist}\n\n Question: {query}. "
+        "Provide detailed and accurate answer with maximum 3 products. "
+        "Always include the reason. "
+        "If the question is product related, always attach product id"
+    )
+
+    # Call OpenAI API with streaming
+    response = openai.chat.completions.create(
+        model="gpt-4",  # Adjust the model name as per availability
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant. Answer accurately and give reason."},
+            {"role": "user", "content": prompt}
+        ],
+        stream=True  # Enable streaming
+    )
+    
+    # Placeholder for the response
+    output_placeholder = st.empty()
+    collected_messages = []
+
+    # Stream the response chunks
+    for chunk in response:
+        chunk_message = chunk.choices[0].delta.content
+        if chunk_message:
+            collected_messages.append(chunk_message)
+            # Update the placeholder with the current response
+            output_placeholder.markdown("".join(collected_messages))
+
+    # Return the full response
+    return "".join(collected_messages)
+
 # 4. Multi-Agent System
 def multi_agent_rag(query, vector_db, purchase_hist):
     retrieved_docs = retrieve_documents(query, vector_db)
-    return generate_response_openai(query, retrieved_docs, purchase_hist)
+    #return generate_response_openai(query, retrieved_docs, purchase_hist)
+    return generate_streaming_response_openai(query, retrieved_docs, purchase_hist)
 
 # log debug for button click
     
@@ -144,6 +180,7 @@ def chatbot_function():
                 st.session_state["customer_id"] = None  # Reset ID
             else:
                 response = f"Thank you! Customer ID '{st.session_state['customer_id']}' has been verified. How can I assist you?"
+                st.chat_message("assistant").markdown(response)
         else:
             # Proses permintaan dengan Crew
             try:
@@ -156,7 +193,7 @@ def chatbot_function():
 
         # Simpan dan tampilkan respons dari asisten
         st.session_state.messages.append({"role": "assistant", "content": response})
-        st.chat_message("assistant").markdown(response)
+        #st.chat_message("assistant").markdown(response)
 
         # Extract raw output
         output = response
