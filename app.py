@@ -26,7 +26,7 @@ import cv2
 
 # Please fill your openai api key
 
-openai_api_key = ""
+openai_api_key = "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"
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
@@ -50,27 +50,27 @@ def retrieve_documents(query, vector_db, top_k=5):
     return vector_db.similarity_search(query, top_k)
 
 # 3. Generator Agent
-def generate_response_openai(query, docs, purchase_hist):
-    # Combine retrieved documents into context
-    context = "\n\n".join([doc.page_content for doc in docs])
-    prompt = (
-        f"Answer the following question based on the context:\n\nContext: {context}\n by providing a similarity with user purchase history:\n\n History : {purchase_hist}\n\n Question: {query}. "
-        "Provide detailed and accurate answer with maximum 3 products. "
-        "Always include the reason. "
-        "If the question is product related, always attach product id"
-    )
+# def generate_response_openai(query, docs, purchase_hist):
+#     # Combine retrieved documents into context
+#     context = "\n\n".join([doc.page_content for doc in docs])
+#     prompt = (
+#         f"Answer the following question based on the context:\n\nContext: {context}\n by providing a similarity with user purchase history:\n\n History : {purchase_hist}\n\n Question: {query}. "
+#         "Provide detailed and accurate answer with maximum 3 products. "
+#         "Always include the reason. "
+#         "If the question is product related, always attach product id"
+#     )
 
-    completion = openai.chat.completions.create(
-        model="gpt-4o",  # Adjust the model name as per availability
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant. Answer accurately and give reason"},
-            {"role": "user", "content": prompt}
-        ],
-        stream=True
-    )
-    for chunk in completion:
-        if chunk.choices[0].delta.content is not None:
-            yield chunk.choices[0].delta.content
+#     completion = openai.chat.completions.create(
+#         model="gpt-4o",  # Adjust the model name as per availability
+#         messages=[
+#             {"role": "system", "content": "You are a helpful assistant. Answer accurately and give reason"},
+#             {"role": "user", "content": prompt}
+#         ],
+#         stream=True
+#     )
+#     for chunk in completion:
+#         if chunk.choices[0].delta.content is not None:
+#             yield chunk.choices[0].delta.content
     # return completion.choices[0].message.content
 
 def generate_streaming_response_openai(query, docs, purchase_hist):
@@ -160,7 +160,6 @@ def render_product(product_id):
                 on_click=handle_click,
                 args=("Try ", product_id, url),
             )
-        st.session_state.shown_image.append(img)
 
 # Fungsi utama chatbot
 def chatbot_function():
@@ -184,15 +183,10 @@ def chatbot_function():
         st.session_state.uploaded_image_name = None
     if "waiting_for_image" not in st.session_state:
         st.session_state.waiting_for_image = False
-    if "shown_image" not in st.session_state:
-        st.session_state.shown_image = []
 
     # Menampilkan percakapan sebelumnya
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).markdown(msg["content"])
-    for img in st.session_state.shown_image:
-        #st.image(img)
-        st.session_state.shown_image.remove(img)
     # Input pengguna
     if prompt := st.chat_input(placeholder="Type here for recommend product..."):
         # Simpan dan tampilkan input pengguna
@@ -208,7 +202,6 @@ def chatbot_function():
                 st.session_state["customer_id"] = None  # Reset ID
             else:
                 response = f"Thank you! Customer ID '{st.session_state['customer_id']}' has been verified. How can I assist you?"
-                #st.chat_message("assistant").markdown(response)
         else:
             # Proses permintaan dengan Crew
             try:
@@ -225,29 +218,22 @@ def chatbot_function():
 
         # Extract raw output
         output = response
-        print(output)
         # Regular expression pattern to extract Product ID
         pattern = r"(?i)\b(PROD\d+)\b"
         product_ids = re.findall(pattern, output)
-        print(product_ids)
-        # Menghilangkan duplikasi
-
         unique_product_ids = list(set(product_ids))
         st.session_state.product_ids = unique_product_ids
-        print("Produk ID: ", unique_product_ids)
-        #product_placeholder = st.empty()
 
     if st.session_state.product_ids:
         for product_id in st.session_state.product_ids:
             # Validasi product_ids di df_product
-            with st.container():  # Use a dynamic container
+            with st.container():
                 render_product(product_id)
 
         # Jika sedang menunggu gambar
     if st.session_state.waiting_for_image:
         # Unggah gambar
         uploaded_image = st.file_uploader("Please upload person image:", type=["jpg", "png", "jpeg"])
-        #print("tes upliad:", uploaded_image)
         if uploaded_image:
             st.session_state.uploaded_image = uploaded_image  # Simpan gambar yang diunggah di session state
             st.session_state.uploaded_image_name = uploaded_image.name  # Simpan nama gambar
