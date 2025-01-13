@@ -92,7 +92,7 @@ def generate_streaming_response_openai(query, docs, purchase_hist):
         ],
         stream=True  # Enable streaming
     )
-    
+     
     # Placeholder for the response
     output_placeholder = st.empty()
     collected_messages = []
