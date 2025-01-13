@@ -1,24 +1,11 @@
-from crewai_tools import BaseTool, CSVSearchTool
 import streamlit as st
 from PIL import Image
 import os
 import pandas as pd
-from langchain.chat_models import ChatOpenAI
-from crewai.agent import Agent
-from crewai.task import Task
-from crewai.crew import Crew
-from crewai.process import Process
-# retrieve purchase history tool 
-from langchain.agents.agent_types import AgentType
-from langchain_experimental.agents.agent_toolkits import create_csv_agent
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import OpenAIEmbeddings
 import openai
 from langchain.vectorstores import FAISS
-# from langchain.embeddings import OpenAIEmbeddings
-from langchain.schema import Document
 import os
-import tiktoken
 import re
 from gradio_client import Client as GradioClient, file, handle_file
 import cv2
