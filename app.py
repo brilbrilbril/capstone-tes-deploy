@@ -13,8 +13,8 @@ import cv2
 
 # Please fill your openai api key
 
-#openai_api_key = ""
-#os.environ["OPENAI_API_KEY"] = openai_api_key
+openai_api_key = ""
+os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
 
