@@ -1,6 +1,0 @@
-streamlit==1.41.1
-langchain-community==0.3.13
-langchain-openai==0.2.14
-gradio_client==1.5.2
-opencv-python==4.10.0.84
-faiss-cpu==1.9.0.post1

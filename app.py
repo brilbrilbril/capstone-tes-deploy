@@ -1,5 +1,6 @@
 import streamlit as st
 from PIL import Image
+from dotenv import load_dotenv
 import os
 import pandas as pd
 from langchain_openai import OpenAIEmbeddings
@@ -7,20 +8,32 @@ import openai
 from langchain.vectorstores import FAISS
 import os
 import re
-from gradio_client import Client as GradioClient, file, handle_file
-import cv2
+from io import StringIO, BytesIO
+from google.cloud import storage
+import replicate
 
+load_dotenv()
+os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_API_TOKEN")
+
+# credential_path = "D:\RL\IYKRA\Capstone\application_default_credentials.json"
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
 
 # Please fill your openai api key
-
+client = storage.Client()
+bucket_name = "capstone_iykra"
+bucket = client.bucket(bucket_name)
 openai_api_key = ""
 os.environ["OPENAI_API_KEY"] = openai_api_key
 
 #csv_search_tool_history = CSVSearchTool("Dataset/Customer_Interaction_Data.csv")
 
 #csv_search_tool_product = CSVSearchTool("Dataset/final_product_catalog.csv")
-df = pd.read_csv('Dataset/Customer_Interaction_Data_v2.csv')
-df_products = pd.read_csv('Dataset/final_product_catalog.csv')
+blob_cust_interaction = bucket.blob('Dataset/Customer_Interaction_Data_v2.csv')
+blob_product_catalog = bucket.blob('Dataset/final_product_catalog_v2.csv')
+cust_interaction = blob_cust_interaction.download_as_text()
+prod_catalog = blob_product_catalog.download_as_text()
+df = pd.read_csv(StringIO(cust_interaction))
+df_products = pd.read_csv(StringIO(prod_catalog))
 
 # 1. Create Vector Database
 def load_vector_db():
@@ -110,30 +123,59 @@ def handle_click(action, product_id, url):
     st.session_state.waiting_for_image = True
 
 # virtual try on function
-def virtual_tryon(garment_img_path, person_img_path):
-    gradio_client = GradioClient("Nymbo/Virtual-Try-On")
-    result = gradio_client.predict(
-                dict={"background": file(person_img_path), "layers": [], "composite": None},
-                garm_img=handle_file(garment_img_path),
-                garment_des="",
-                is_checked=True,
-                is_checked_crop=False,
-                denoise_steps=30,
-                seed=42,
-                api_name="/tryon"
-            )
-    try_on_image_path = result[0]
-    img = cv2.imread(try_on_image_path)
-    cv2.imwrite("result.png", img)
+def virtual_tryon(garment_img_path, person_img_path, prod_id):
+    print("download from gcs")
+    garment_image = download_image_from_gcs(garment_img_path)
+    person_image = download_image_from_gcs(person_img_path)
+    print("to bytes")
+    garment_file = BytesIO()
+    person_file = BytesIO()
+    garment_image.save(garment_file, format="JPEG")
+    person_image.save(person_file, format="JPEG")
+    print("to file")
+    garment_file.seek(0)
+    person_file.seek(0)
+    type = df_products[df_products['Product_ID'] == prod_id]["Type"].to_string(index=False)
+    short_desc = df_products[df_products['Product_ID'] == prod_id]["Category"].to_string(index=False)
+    print("vton")
+    input = {
+        "seed": 42,
+        "steps": 30,
+        "category": type,
+        "garm_img": garment_file,
+        "human_img": person_file,
+        "garment_des": short_desc,
+    }
 
-    return Image.open("result.png")
+    output = replicate.run(
+        "cuuupid/idm-vton:c871bb9b046607b680449ecbae55fd8c6d945e0a1948644bf2361b3d021d3ff4",
+        input=input
+    )
+    print("done")
+    return str(output)
+
+def upload_image_to_gcs(image_bytes, image_name):
+    blob = bucket.blob(image_name)
+    blob.upload_from_string(image_bytes, content_type='image/jpeg')
+    #return f"gs://{bucket.name}/{image_name}"
+
+def download_image_from_gcs(img_path):
+    # Construct the full GCS URL by prepending 'gs://'
+    #gcs_url = f"gs://{bucket_name}/{gcs_path}"
+    
+    # Download the image as bytes from GCS
+    blob = client.bucket(bucket_name).blob(img_path)
+    image_bytes = blob.download_as_bytes()
+    # Open the image from the downloaded bytes
+    image = Image.open(BytesIO(image_bytes))
+    return image
 
 def render_product(product_id):
     filtered_df = df_products[df_products['Product_ID'] == product_id]
     if not filtered_df.empty:
         # Mendapatkan URL gambar atau file path
         url = filtered_df['Url_Image'].iloc[0]
-        img = Image.open(url)
+        img = download_image_from_gcs(url)
         img.thumbnail((300, 600))  # Maksimum lebar dan tinggi
 
         # Menggunakan tiga kolom untuk memusatkan elemen
@@ -192,10 +234,12 @@ def chatbot_function():
         else:
             # Proses permintaan dengan Crew
             try:
-                inputs = {"query": prompt, "customer": st.session_state["customer_id"]}
-                vector_db = load_vector_db()
-                transaction_data = retrieve_transcation(st.session_state["customer_id"])
-                response = multi_agent_rag(inputs['query'], vector_db, transaction_data)
+                # inputs = {"query": prompt, "customer": st.session_state["customer_id"]}
+                # vector_db = load_vector_db()
+                # transaction_data = retrieve_transcation(st.session_state["customer_id"])
+                #response = multi_agent_rag(inputs['query'], vector_db, transaction_data)
+                print(df_products[df_products['Product_ID'] == "PROD4100"])
+                response = "PROD4100, PROD2104, and PROD3659"
             except Exception as e:
                 response = f"An error occurred: {e}"
 
@@ -227,17 +271,17 @@ def chatbot_function():
             image = Image.open(uploaded_image)
             image.thumbnail((300, 600))
             st.image(image, caption="Your image")
-            with open(uploaded_image.name, "wb") as f:
-                f.write(uploaded_image.getbuffer())
+            image_bytes = uploaded_image.getvalue()
+            upload_image_to_gcs(image_bytes, uploaded_image.name)
             st.success(f"Image uploaded and saved successfully!")
 
             with st.spinner('Virtual try on is running...'):
                 print(st.session_state.product_url)
-                result_vto = virtual_tryon(st.session_state.product_url, uploaded_image.name)
+                result_vto = virtual_tryon(st.session_state.product_url, uploaded_image.name, st.session_state.product_id)
             st.success("Done!")
 
             # tampilkan hasilnya
-            result_vto.thumbnail((300, 600))
+            # result_vto.thumbnail((300, 600))
             st.image(result_vto, caption=f"Try on for {st.session_state.product_id}")
 
             # Stop asking for the image
